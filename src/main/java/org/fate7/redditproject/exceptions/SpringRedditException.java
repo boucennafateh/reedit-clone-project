@@ -1,8 +1,8 @@
 package org.fate7.redditproject.exceptions;
 
-public class SpringRedditException extends Exception {
+public class SpringRedditException extends RuntimeException {
 
     public SpringRedditException(String e) {
-        System.out.println(e);
+        super(e);
     }
 }
