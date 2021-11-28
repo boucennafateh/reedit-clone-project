@@ -2,12 +2,15 @@ package org.fate7.redditproject.service;
 
 import lombok.RequiredArgsConstructor;
 import org.fate7.redditproject.dto.SubredditDto;
+import org.fate7.redditproject.exceptions.SpringRedditException;
+import org.fate7.redditproject.mapper.SubredditMapper;
 import org.fate7.redditproject.model.Subreddit;
 import org.fate7.redditproject.repository.SubredditRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
@@ -15,12 +18,13 @@ import java.util.stream.Collectors;
 public class SubredditService {
 
     private final SubredditRepository subredditRepository;
+    private final SubredditMapper subredditMapper;
 
 
     @Transactional
     public SubredditDto saveSubreddit(SubredditDto subredditDto) {
 
-        Subreddit subreddit = subredditRepository.save(dtoTOSubreddit(subredditDto));
+        Subreddit subreddit = subredditRepository.save(subredditMapper.mapDtoToSubreddit(subredditDto));
         subredditDto.setId(subreddit.getId());
         return subredditDto;
     }
@@ -29,26 +33,15 @@ public class SubredditService {
     public List<SubredditDto> getAll(){
 
         return subredditRepository.findAll().stream()
-                .map(this::mapToDto)
+                .map(subredditMapper::mapSubredditToDto)
                 .collect(Collectors.toList());
 
     }
 
-
-    private Subreddit dtoTOSubreddit(SubredditDto subredditDto){
-        return Subreddit.builder()
-                .name(subredditDto.getName())
-                .description(subredditDto.getDescription())
-                .build();
-    }
-
-    private SubredditDto mapToDto(Subreddit subreddit){
-        return SubredditDto.builder()
-                .id(subreddit.getId())
-                .name(subreddit.getName())
-                .description(subreddit.getDescription())
-                .nbPosts(subreddit.getPosts().size())
-                .build();
-
+    @Transactional(readOnly = true)
+    public SubredditDto get(Long id) {
+        Optional<Subreddit> subredditOptional = subredditRepository.findById(id);
+        Subreddit subreddit = subredditOptional.orElseThrow(() -> new SpringRedditException("Subreddit n'existe pas, id = " + id));
+        return subredditMapper.mapSubredditToDto(subreddit);
     }
 }
