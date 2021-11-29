@@ -88,4 +88,13 @@ public class AuthService {
         return new AuthenticationResponse(token, loginRequest.getUsername());
 
     }
+
+    @Transactional(readOnly = true)
+    public User getCurrentUser(){
+        org.springframework.security.core.userdetails.User userDetails
+                = (org.springframework.security.core.userdetails.User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return userRepository.findByUsername(userDetails.getUsername())
+                .orElseThrow(() -> new SpringRedditException("User name does not exist, " + userDetails.getUsername()));
+
+    }
 }
